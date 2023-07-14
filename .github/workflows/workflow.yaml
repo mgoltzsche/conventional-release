@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    branches:
+    - main
+
+    tags:
+    - v*.*.*
+
+  pull_request:
+    branches:
+    - main
+
+# Grant the github.token write access.
+# (On pull_request builds, the github.token provides read-only permissions.)
+permissions:
+  contents: write
+
+# Ensure builds run sequentially per branch, cancel running PR/branch builds.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+      with:
+        # To reduce the attack surface, don't expose the token to subsequent
+        # steps implicitly, particularly not to custom, 3rd party build logic.
+        # See https://github.com/actions/checkout/issues/485
+        persist-credentials: false
+        fetch-depth: 0
+
+    - id: release
+      name: Prepare release
+      uses: ./
+      with:
+        token: ${{ github.token }}
+        github-release-draft: true
+        replace-major-version-tag: true
+        commit-files: ./action.yml
+        # Must let post-entrypoint replace action.yml since it is reloaded on post-entrypoint execution
+        move-file-from: ./action.yml.release
+        move-file-to: ./action.yml
+
+    - name: Test release Action output
+      run: |
+        set -ux
+        echo "$VERSION" | grep -Eq '[0-9]+\.[0-9]+\.[0-9]+(-[^ ]+)?'
+        [ "$VERSION" = "$RELEASE_VERSION" ]
+        EXPECT_RELEASE=$(echo "$GITHUB_REF" | grep -Eq '^refs/tags/v' && echo true || echo false)
+        if [ "$GITHUB_REF" = refs/heads/main ]; then
+          EXPECT_RELEASE=$(git log --oneline -n1 | grep -Eq '(feat|fix):' && echo true || echo false)
+        fi
+        [ "$RELEASE" = $EXPECT_RELEASE ]
+        [ "$RELEASE" = "$RELEASE_BUILD" ]
+      env:
+        VERSION: ${{ steps.release.outputs.version }}
+        RELEASE: ${{ steps.release.outputs.release }}
+
+    - name: Replace image reference within action.yml
+      run: |
+        sed -E "s| image: Dockerfile| image: docker://mgoltzsche/conventional-release:${RELEASE_VERSION}|" action.yml > action.yml.release
+

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -eu
+
+: ${IGNORE_COMMITS_BEFORE:=}
+
+COMMITLOG="$(git-sv commit-log -r hash -s "$IGNORE_COMMITS_BEFORE")"
+JQQUERY='.[] | select(.message.type==null) | "\u274c ERROR: Commit "+.hash
+	+" has malformed message:\n\n  "+.message.description+"\n\n"'
+ERRORS="$(echo "$COMMITLOG" | jq -sr "$JQQUERY")"
+
+if [ "$ERRORS" ]; then
+	printf '\n%s\n\n' "$ERRORS"
+	echo "Please use Conventional Commits!" >&2
+	echo "See https://www.conventionalcommits.org/en/v1.0.0/" >&2
+	echo "To ignore older commits, you can specify IGNORE_COMMITS_BEFORE." >&2
+	exit 1
+fi
+
+printf '\xE2\x9C\x94 %s\n' 'Commit messages are valid.'

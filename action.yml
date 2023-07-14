@@ -1,0 +1,71 @@
+name: conventional-release
+description: Generates a new version and tag based on conventional commits
+
+branding:
+  icon: tag
+  color: blue
+
+inputs:
+  token:
+    description: Token used to push git tag
+    required: true
+  release-branch:
+    description: Name of the branch releases should be created from
+    default: main
+  replace-major-version-tag:
+    description: If 'true' force-push the major version as git tag
+    default: false
+  ignore-commits-before:
+    description: The commit SHA to start the commit message validation from
+  commit-files:
+    description: Create a new commit including the specified files and tag it
+  move-file-from:
+    description: Source file to move before commit
+  move-file-to:
+    description: Target file to move source file to
+  github-release-enabled:
+    description: Create GitHub Release
+    default: true
+  github-release-draft:
+    description: Create the GitHub Release as draft
+    default: false
+  github-release-latest:
+    description: Mark GitHub Release as latest
+    default: true
+  github-release-files:
+    description: Attach workspace files to the GitHub Release
+  ref:
+    description: Git ref
+    default: ${{ github.ref }}
+  enabled:
+    # internal property, workaround to get job status, don't specify explicitly
+    default: ${{ job.status == 'success' }}
+
+outputs:
+  version:
+    description: Next version
+  release:
+    description: Whether this is a release build
+
+runs:
+  using: docker
+  image: Dockerfile
+  #image: docker://mgoltzsche/conventional-release
+  entrypoint: prepare-release
+  post-entrypoint: complete-release
+  env:
+    IGNORE_COMMITS_BEFORE: ${{ inputs.ignore-commits-before }}
+    RELEASE_BRANCH: ${{ inputs.release-branch }}
+    GIT_TOKEN: ${{ inputs.token }}
+    GIT_REF: ${{ inputs.ref }}
+    ENABLED: ${{ inputs.enabled }}
+    MOVE_FILE_FROM: ${{ inputs.move-file-from }}
+    MOVE_FILE_TO: ${{ inputs.move-file-to }}
+    COMMIT_FILES: ${{ inputs.commit-files }}
+    GITHUB_RELEASE_ENABLED: ${{ inputs.github-release-enabled }}
+    GITHUB_RELEASE_DRAFT: ${{ inputs.github-release-draft }}
+    GITHUB_RELEASE_LATEST: ${{ inputs.github-release-latest }}
+    GITHUB_RELEASE_FILES: ${{ inputs.github-release-files }}
+    # TODO: make this work. currently this doesn't work since sv4git starts incrementing the version from the major tag every time, creating duplicate versions
+    #PUSH_MAJOR_TAG: ${{ inputs.replace-major-version-tag }}
+    PUSH_MAJOR_TAG: false

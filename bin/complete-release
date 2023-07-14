@@ -1,0 +1,72 @@
+#!/bin/sh
+
+: ${RELEASE_BRANCH:=main}
+: ${GITHUB_RELEASE_ENABLED:=false}
+
+TAG_PREFIX=v
+
+requireNoUncommittedChanges() {
+	if [ ! -z "$(git status --porcelain)" ]; then
+		git status >&2
+		echo 'ERROR: Working directory contains uncommitted changes!' >&2
+		echo 'Please add those files to .gitignore.' >&2
+		return 1
+	fi
+}
+
+set -eu
+
+if [ ! "$ENABLED" = true ] || [ ! "$STATE_RELEASE" = true ]; then
+	requireNoUncommittedChanges
+	echo Skipping release completion
+	exit 0
+fi
+
+if [ "$MOVE_FILE_FROM" ]; then
+	mv "$MOVE_FILE_FROM" "$MOVE_FILE_TO"
+fi
+
+GIT_TAG="${TAG_PREFIX}$STATE_VERSION"
+CHANGELOG="$(echo "$STATE_CHANGELOG" | base64 -d)"
+
+# Configure git authentication.
+# To to able to run GHA's checkout Action v3 with
+# `persist-credentials: false`, git credentials need to be configured here in a
+# way that only steps/Actions that have the github.token assigned explicitly
+# can write into the repo.
+# This is for security purposes: the actual user-defined build logic should not
+# be able to modify the repository and therefore not have access to the token.
+git config credential.helper '!f() { echo username=git; echo "password=$GIT_TOKEN"; };f'
+git config user.name "${GITHUB_ACTOR}"
+git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+if [ "$COMMIT_FILES" ]; then
+	echo "Committing file(s): $COMMIT_FILES"
+	git add $COMMIT_FILES
+	MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$STATE_VERSION" "$CHANGELOG")"
+	git commit -m"$MSG"
+	requireNoUncommittedChanges || true
+	git tag -a "$GIT_TAG" -m "$MSG" -f
+fi
+
+if [ "$STATE_PUSHTAG" = true ] || [ "$COMMIT_FILES" ]; then
+	echo "Pushing new git tag $GIT_TAG"
+	OPTS=
+	[ ! "$COMMIT_FILES" ] || OPTS=-f
+	git push origin "$GIT_TAG" --quiet --no-verify $OPTS
+fi
+
+if [ "$PUSH_MAJOR_TAG" = true ] && echo "$GIT_TAG" | grep -Eq '^'"$TAG_PREFIX"'([0-9]+)\.([0-9]+)\.([0-9]+)$'; then
+	MAJOR_GIT_TAG="$(echo "$GIT_TAG" | grep -Eo '^'"$TAG_PREFIX"'[0-9]+')"
+	git tag -a "$MAJOR_GIT_TAG" -m "$MAJOR_GIT_TAG" -f
+	git push origin "$MAJOR_GIT_TAG" --quiet --no-verify -f
+fi
+
+if [ "$GITHUB_RELEASE_ENABLED" = true ]; then
+	echo "Creating GitHub release for tag $GIT_TAG"
+	export GH_TOKEN="$GIT_TOKEN"
+	OPTS=
+	[ ! "$GITHUB_RELEASE_LATEST" = true ] || OPTS=--latest
+	[ ! "$GITHUB_RELEASE_DRAFT" = true ] || OPTS=--draft
+	gh release create "$GIT_TAG" -t "$GIT_TAG" --notes="$CHANGELOG" $OPTS $GITHUB_RELEASE_FILES
+fi

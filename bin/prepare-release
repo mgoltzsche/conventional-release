@@ -1,0 +1,74 @@
+#!/bin/sh
+
+set -eu
+
+validate-commits
+echo
+
+: ${RELEASE_BRANCH:=main}
+
+TAG_PREFIX=v
+COMMIT="$(git rev-parse --short HEAD)"
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+CURVER="$(git-sv current-version)"
+NXTVER="$(git-sv next-version)"
+CHANGELOG="$(git-sv release-notes)"
+ISRELEASE=false
+ISPUSHTAG=false
+
+if echo "$GIT_REF" | grep -Eq '^refs/tags/'"${TAG_PREFIX}"'[0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?$'; then
+	# Derive version from manually pushed tag
+	NXTVER=$(echo "$GIT_REF" | sed -E 's!^refs/tags/'"${TAG_PREFIX}"'([0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?)$!\1!')
+	GIT_TAG="${TAG_PREFIX}$NXTVER"
+
+	ISRELEASE=true
+	ISPUSHTAG=false
+elif [ "$RELEASE_BRANCH" = "$BRANCH" ]; then
+	if [ "$CURVER" = "$NXTVER" ] || [ "$(echo "$CHANGELOG" | wc -l)" -eq 1 ]; then
+		ISRELEASE=false
+
+		echo 'Skipping release since no commit found that needs to be released'
+		echo
+	else
+		ISRELEASE=true
+		ISPUSHTAG=true
+
+		git config user.name "${GITHUB_ACTOR}"
+		git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+		GIT_TAG="${TAG_PREFIX}$NXTVER"
+		MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$NXTVER" "$CHANGELOG")"
+		git tag -a "$GIT_TAG" -m "$MSG"
+	fi
+else
+	NXTVER="$(printf %s-dev-%s "$NXTVER" "$COMMIT")"
+fi
+
+# Detect insecure credential usage
+if grep -q 'AUTHORIZATION:' .git/config; then
+	echo '::warning title=Credentials persisted within .git/config::Storing git credentials within .git/config grants write access to all subsequent job steps! To reduce the attack surface, this should be avoided by e.g. using actions/checkout@v3 with `persist-credentials: false`.'
+fi
+
+# Set GitHub Action state (post-entrypoint to receive as env vars with prefix STATE_)
+CHANGELOG_BASE64="$(echo "$CHANGELOG" | base64 -w 0)"
+echo "PUSHTAG=$ISPUSHTAG"          >> $GITHUB_STATE
+echo "CHANGELOG=$CHANGELOG_BASE64" >> $GITHUB_STATE
+echo "RELEASE=$ISRELEASE"          >> $GITHUB_STATE
+echo "VERSION=$NXTVER"             >> $GITHUB_STATE
+
+# Set GitHub Action outputs
+echo version="$NXTVER"  >> $GITHUB_OUTPUT
+echo release=$ISRELEASE >> $GITHUB_OUTPUT
+
+# Export GitHub Action env vars for subsequent steps
+echo "RELEASE_BUILD=$ISRELEASE" >> $GITHUB_ENV
+echo "RELEASE_VERSION=$NXTVER"  >> $GITHUB_ENV
+
+echo "release: $ISRELEASE"
+echo "version: $NXTVER"
+
+if [ "$(echo "$CHANGELOG" | wc -l)" -gt 1 ]; then
+	echo
+	echo "CHANGELOG:"
+	echo "$CHANGELOG"
+fi
