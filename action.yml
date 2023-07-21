@@ -49,7 +49,7 @@ outputs:
 
 runs:
   using: docker
-  image: Dockerfile
+  image: docker://mgoltzsche/conventional-release:0.1.0
   #image: docker://mgoltzsche/conventional-release
   entrypoint: prepare-release
   post-entrypoint: complete-release
