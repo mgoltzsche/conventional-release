@@ -4,14 +4,16 @@ Background and design principles of an Action that supports releases driven by [
 
 ## Motivation & requirements
 
-There is a need for an easy to use, security-hardened Action that allows to
+There is a need for an easy to use Action that allows to
 
 * generate new releases driven by Conventional Commits or
 * opt in for manually triggered releases (tag pushes; without having to change the whole workflow when switching from one practice to the other) and to
 * delegate the actual release build to the rest of the GitHub job in order to
 * be able to use the same workflow/job definition for both pull request and release builds (to detect release problems early and because of DRY) and to
-* validate commits within pull requests implicitly
+* validate commit messages also within pull requests implicitly and
+* fail builds that leave uncommitted changes.
 
+...basically everything release-related that is not worth maintaining in a Makefile.
 
 ## Prior work
 
@@ -45,13 +47,28 @@ However, it does not support commit message validation and changelog generation.
 
 This tool provides the building blocks for an Action.
 
-
 ## Security considerations
 
-To reduce the attack surface, the git credentials/token should not be exposed to (build and test) code/scripts that do not need it.
+Embracing open source and collaboration across the globe also increases the risk of supply chain attacks.
+This is particularly true when developing automation that executes 3rd party code.
+We have to take into account that a library or tool used within our CI build/test process may contain malicious code at some point and/or that an attacker tries to submit malicious code into our codebase and automation via a pull request.
+We cannot protect ourselves from that 100% but we can mitigate risks and set up hurdles - security concepts are layered like an onion.
+GitHub's default repository settings prevent our workflows from being run with code submitted by anybody's pull request, unless the repository owner grants the execution explicitly or trusts the author.
+Hence, we can and should limit who can run our workflows.
+Now we need to always pay full attention when reviewing the code unknown pull request authors are submitting before allowing them to run it.
+However, we are humans and it is not always possible during the daily routine.
+Due to this reason, pull request workflows should not have access to credentials with write access and fortunately that is the default configuration within GitHub.
+However, there is still the good chance that malicious code ends up being executed within our workflow (after pr merge) and shipped to our users.
+In that case we have to reduce the blast radius and at least have visibility within the git history what code is shipped exactly instead of letting an attacker inject malicious code into artifacts without any transparency within the git history.
+For this reason, every workflow step should receive only the minimal permissions it needs and we have to be particularly cautious when granting write permissions to workflows.
 
-To achieve this, the following requirements must be met:
+To be able to push a git tag, the Action requires the GitHub token (`github.token`) to have write permissions (by declaring that within the calling workflow and explicitly passing the token to the Action via an input).
+To reduce the attack surface, the GitHub token should not be exposed to (build/test) code/scripts that do not need it.
+Though, since all regular workflow steps are run using the same user (UID 1001) and with access to the same shared directories, they can basically all access the GitHub token if it was passed to one of the steps within the same job (by either obtaining the token from the file system or inject malicious code into a script that a subsequently run step with privileges executes).
+An Action has little means to protect its state from non-docker steps run within the same job:
+To prevent build/test steps from injecting malicious code into the git credential helper in order to obtain the token, this Action writes the credential helper configuration within the post-build step, directly before using it.
 
-* The actions/checkout Action must be configured not to persist credentials (needs to be done by the user within her workflow).
-* Prevent build/test steps from injecting malicious code via git credential helper by configuring it within the post-build step.
-* Scripts within the home directory such as `~/.bashrc` cannot be manipulated by previous container steps since GHA mounts a separate home directory into the Action that differs from the directory available to regular workflow steps. (To be 100% sure a binary could be built to push the git tag without running a shell.)
+Thus, it is up to the workflow author really to reduce security risks by applying the following practices:
+
+* The actions/checkout Action must be configured not to persist credentials within the workspace.
+* Prevent workflow steps that don't need to use credentials (build/test) from accessing them by e.g. not storing credentials within the home directory and workspace at all or by running those steps within a container (e.g. using `uses: docker://<image>` or as dockerized Action) since containerized steps don't get the same home directory mounted as the other workflow steps.

@@ -26,10 +26,9 @@ GIT_TAG="${TAG_PREFIX}$STATE_VERSION"
 CHANGELOG="$(echo "$STATE_CHANGELOG" | base64 -d)"
 
 # Configure git authentication.
-# To to able to run GHA's checkout Action v3 with
-# `persist-credentials: false`, git credentials need to be configured here in a
-# way that only steps/Actions that have the github.token assigned explicitly
-# can write into the repo.
+# To to able to run GHA's checkout Action v3 with `persist-credentials: false`,
+# git credentials need to be configured here in a way that only steps/Actions
+# that have the github.token assigned explicitly can write into the repo.
 # This is for security purposes: the actual user-defined build logic should not
 # be able to modify the repository and therefore not have access to the token.
 git config credential.helper '!f() { echo username=git; echo "password=$GIT_TOKEN"; };f'
