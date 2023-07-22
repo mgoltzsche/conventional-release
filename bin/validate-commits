@@ -10,7 +10,7 @@ JQQUERY='.[] | select(.message.type==null) | "\u274c ERROR: Commit "+.hash
 ERRORS="$(echo "$COMMITLOG" | jq -sr "$JQQUERY")"
 
 if [ "$ERRORS" ]; then
-	printf '\n%s\n\n' "$ERRORS"
+	printf '\n%s\n\n' "$ERRORS" >&2
 	echo "Please use Conventional Commits!" >&2
 	echo "See https://www.conventionalcommits.org/en/v1.0.0/" >&2
 	echo "To ignore older commits, you can specify IGNORE_COMMITS_BEFORE." >&2

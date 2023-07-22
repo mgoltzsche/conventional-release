@@ -34,7 +34,7 @@ inputs:
     description: Git ref
     default: ${{ github.ref }}
   enabled:
-    # internal property, workaround to get job status, don't specify explicitly
+    description: internal property, workaround to get job status, don't specify explicitly
     default: ${{ job.status == 'success' }}
 
 outputs:
@@ -59,6 +59,4 @@ runs:
     GITHUB_RELEASE_DRAFT: ${{ inputs.github-release-draft }}
     GITHUB_RELEASE_LATEST: ${{ inputs.github-release-latest }}
     GITHUB_RELEASE_FILES: ${{ inputs.github-release-files }}
-    # TODO: make this work. currently this doesn't work since sv4git starts incrementing the version from the major tag every time, creating duplicate versions
-    #PUSH_MAJOR_TAG: ${{ inputs.replace-major-version-tag }}
-    PUSH_MAJOR_TAG: false
+    PUSH_MAJOR_TAG: ${{ inputs.replace-major-version-tag }}

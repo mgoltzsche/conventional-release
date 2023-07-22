@@ -7,6 +7,8 @@ RUN set -eux; \
 	git-sv --help >/dev/null || [ $? -eq 1 ]
 
 COPY bin/* /usr/local/bin/
+COPY config.yml /sv4git-home/
+ENV SV4GIT_HOME=/sv4git-home
 # GitHub Actions requires UID 1001
 USER 1001
 ENTRYPOINT ["/usr/local/bin/git-sv"]
