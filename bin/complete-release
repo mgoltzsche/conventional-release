@@ -22,10 +22,6 @@ if [ ! "$ENABLED" = true ] || [ ! "$STATE_RELEASE" = true ]; then
 	exit 0
 fi
 
-if [ "$MOVE_FILE_FROM" ]; then
-	mv "$MOVE_FILE_FROM" "$MOVE_FILE_TO"
-fi
-
 GIT_TAG="${TAG_PREFIX}$STATE_VERSION"
 CHANGELOG="$(echo "$STATE_CHANGELOG" | base64 -d)"
 

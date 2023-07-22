@@ -1,10 +1,11 @@
-FROM golang:1.20-alpine3.18 AS sv4git
-ENV SV4GIT_VERSION=v2.9.0
-RUN go install github.com/bvieira/sv4git/v2/cmd/git-sv@$SV4GIT_VERSION
-
 FROM alpine:3.18
 RUN apk add --update --no-cache git jq github-cli
-COPY --from=sv4git /go/bin/git-sv /usr/local/bin/
+ENV SV4GIT_VERSION=2.9.0
+RUN set -eux; \
+	PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed -E 's!^x86_64$!amd64!; s!^aarch64$!arm64!'); \
+	wget -O - https://github.com/bvieira/sv4git/releases/download/v2.9.0/git-sv_${SV4GIT_VERSION}_${PLATFORM}.tar.gz | tar -xzf - -C /usr/local/bin; \
+	git-sv --help >/dev/null || [ $? -eq 1 ]
+
 COPY bin/* /usr/local/bin/
 # GitHub Actions requires UID 1001
 USER 1001

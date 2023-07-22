@@ -19,10 +19,6 @@ inputs:
     description: The commit SHA to start the commit message validation from
   commit-files:
     description: Create a new commit including the specified files and tag it
-  move-file-from:
-    description: Source file to move before commit
-  move-file-to:
-    description: Target file to move source file to
   github-release-enabled:
     description: Create GitHub Release
     default: true
@@ -50,7 +46,6 @@ outputs:
 runs:
   using: docker
   image: Dockerfile
-  #image: docker://mgoltzsche/conventional-release
   entrypoint: prepare-release
   post-entrypoint: complete-release
   env:
@@ -59,8 +54,6 @@ runs:
     GIT_TOKEN: ${{ inputs.token }}
     GIT_REF: ${{ inputs.ref }}
     ENABLED: ${{ inputs.enabled }}
-    MOVE_FILE_FROM: ${{ inputs.move-file-from }}
-    MOVE_FILE_TO: ${{ inputs.move-file-to }}
     COMMIT_FILES: ${{ inputs.commit-files }}
     GITHUB_RELEASE_ENABLED: ${{ inputs.github-release-enabled }}
     GITHUB_RELEASE_DRAFT: ${{ inputs.github-release-draft }}

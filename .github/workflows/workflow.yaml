@@ -16,6 +16,7 @@ on:
 # (On pull_request builds, the github.token provides read-only permissions.)
 permissions:
   contents: write
+  packages: write
 
 # Ensure builds run sequentially per branch, cancel running PR/branch builds.
 concurrency:
@@ -45,9 +46,6 @@ jobs:
         github-release-draft: true
         replace-major-version-tag: true
         commit-files: ./action.yml
-        # Must let post-entrypoint replace action.yml since it is reloaded on post-entrypoint execution
-        move-file-from: ./action.yml.release
-        move-file-to: ./action.yml
 
     - name: Test release Action output
       run: |
@@ -64,7 +62,27 @@ jobs:
         VERSION: ${{ steps.release.outputs.version }}
         RELEASE: ${{ steps.release.outputs.release }}
 
-    - name: Replace image reference within action.yml
+    - name: Set up qemu
+      uses: docker/setup-qemu-action@v1
+      with:
+        platforms: all
+
+    - name: Log into GitHub Container Registry
+      if: steps.release.outputs.release == 'true'
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Build and push container image
+      if: steps.release.outputs.release == 'true'
       run: |
-        sed -E "s| image: Dockerfile| image: docker://mgoltzsche/conventional-release:${RELEASE_VERSION}|" action.yml > action.yml.release
+        docker buildx create --use
+        docker buildx build --push --platform=$PLATFORMS -t $IMAGE .
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+      env:
+        IMAGE: ghcr.io/${{ github.repository }}:${{ steps.release.outputs.version }}
+        PLATFORMS: linux/arm64/v8,linux/amd64
+
+    - name: Replace image reference within action.yml
+      if: steps.release.outputs.release == 'true'
+      run: |
+        sed -Ei "s| image: Dockerfile| image: docker://${IMAGE}|" action.yml
 
