@@ -52,7 +52,7 @@ if [ "$STATE_PUSHTAG" = true ] || [ "$COMMIT_FILES" ]; then
 fi
 
 if echo "$GIT_TAG" | grep -Eq '^'"$TAG_PREFIX"'([0-9]+)\.([0-9]+)\.([0-9]+)$'; then
-	if [ "$PUSH_MAJOR_TAG" = true ]; then
+	if [ "$UPDATE_MAJOR_TAG" = true ]; then
 		MAJOR_GIT_TAG="$(echo "$GIT_TAG" | grep -Eo '^'"$TAG_PREFIX"'[0-9]+')"
 		git tag -a "$MAJOR_GIT_TAG" -m "$MAJOR_GIT_TAG" -f
 		git push origin "$MAJOR_GIT_TAG" --quiet --no-verify -f

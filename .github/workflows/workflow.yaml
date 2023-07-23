@@ -44,7 +44,7 @@ jobs:
       with:
         token: ${{ github.token }}
         github-release-draft: true
-        replace-major-version-tag: true
+        update-major-tag: true
         commit-files: ./action.yml
 
     - name: Test release Action output
