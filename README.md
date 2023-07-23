@@ -66,7 +66,7 @@ jobs:
 
     - id: release
       name: Prepare release
-      uses: mgoltzsche/conventional-release@v1
+      uses: mgoltzsche/conventional-release@v0
       with:
         token: ${{ github.token }}
 
