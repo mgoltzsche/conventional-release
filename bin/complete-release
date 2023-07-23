@@ -16,7 +16,7 @@ requireNoUncommittedChanges() {
 
 set -eu
 
-if [ ! "$ENABLED" = true ] || [ ! "$STATE_RELEASE" = true ]; then
+if [ ! "$ENABLED" = true ] || [ ! "$STATE_PUBLISH" = true ]; then
 	requireNoUncommittedChanges
 	echo Skipping release completion
 	exit 0

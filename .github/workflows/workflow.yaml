@@ -12,16 +12,16 @@ on:
     branches:
     - main
 
-# Grant the github.token write access.
-# (On pull_request builds, the github.token provides read-only permissions.)
-permissions:
-  contents: write
-  packages: write
-
 # Ensure builds run sequentially per branch, cancel running PR/branch builds.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Grant write access to github.token.
+# (On pull_request builds, github.token provides read-only permissions.)
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
 
     - id: release
       name: Prepare release
-      uses: ./
+      uses: ./ # mgoltzsche/conventional-release
       with:
         token: ${{ github.token }}
         github-release-draft: true
@@ -52,15 +52,15 @@ jobs:
         set -ux
         echo "$VERSION" | grep -Eq '[0-9]+\.[0-9]+\.[0-9]+(-[^ ]+)?'
         [ "$VERSION" = "$RELEASE_VERSION" ]
-        EXPECT_RELEASE=$(echo "$GITHUB_REF" | grep -Eq '^refs/tags/v' && echo true || echo false)
+        EXPECT_PUBLISH=$(echo "$GITHUB_REF" | grep -Eq '^refs/tags/v' && echo true || echo)
         if [ "$GITHUB_REF" = refs/heads/main ]; then
-          EXPECT_RELEASE=$(git log --oneline -n1 | grep -Eq '(feat|fix):' && echo true || echo false)
+          EXPECT_PUBLISH=$(git log --oneline -n1 | grep -Eq '(feat|fix):' && echo true || echo)
         fi
-        [ "$RELEASE" = $EXPECT_RELEASE ]
-        [ "$RELEASE" = "$RELEASE_BUILD" ]
+        [ "$PUBLISH" = "$EXPECT_PUBLISH" ]
+        [ "$PUBLISH" = "$RELEASE_PUBLISH" ]
       env:
         VERSION: ${{ steps.release.outputs.version }}
-        RELEASE: ${{ steps.release.outputs.release }}
+        PUBLISH: ${{ steps.release.outputs.publish }}
 
     - name: Set up qemu
       uses: docker/setup-qemu-action@v1
@@ -68,20 +68,21 @@ jobs:
         platforms: all
 
     - name: Log into GitHub Container Registry
-      if: steps.release.outputs.release == 'true'
+      if: steps.release.outputs.publish
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build (and push) container image
       run: |
         docker buildx create --use
-        docker buildx build --platform=$PLATFORMS -t $IMAGE . ${{ steps.release.outputs.release == 'true' && '--push' || '' }}
+        docker buildx build $PUSH --platform=$PLATFORMS -t $IMAGE .
         echo "IMAGE=$IMAGE" >> $GITHUB_ENV
       env:
         IMAGE: ghcr.io/${{ github.repository }}:${{ steps.release.outputs.version }}
         PLATFORMS: linux/arm64/v8,linux/amd64
+        PUSH: ${{ steps.release.outputs.publish && '--push' || '' }}
 
     - name: Replace image reference within action.yml
-      if: steps.release.outputs.release == 'true'
+      if: steps.release.outputs.publish
       run: |
         sed -Ei "s| image: Dockerfile| image: docker://${IMAGE}|" action.yml
 

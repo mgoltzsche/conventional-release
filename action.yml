@@ -43,8 +43,8 @@ inputs:
 outputs:
   version:
     description: Next version
-  release:
-    description: Whether this is a release build
+  publish:
+    description: Is 'true' when release build, otherwise empty
 
 runs:
   using: docker
