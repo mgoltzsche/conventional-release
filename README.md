@@ -5,11 +5,11 @@ A GitHub Action to automate releases based on [Conventional Commits](https://www
 ## Features
 
 * Supports fully automated releases driven by Conventional Commits.
-* Optionally disable automated versioning in favour of releases based on manually pushed tags (`auto-release: false`).
-* Allow to use the same workflow/job definition for both pull request and release builds.
-* Enforce [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format within commit messages.
-* Fail builds that leave uncommitted changes.
-* Recover from a failed release build automatically (when the next commit is pushed).
+* Allows to disable automated versioning in favour of manually pushing tags (`auto-release: false`).
+* Enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format within commit messages.
+* Recovers from a failed release build automatically (when the next commit is pushed).
+* Allows to use the same workflow/job definition for both pull request and release builds.
+* Fails builds that leave uncommitted changes.
 
 ## Usage
 
@@ -23,12 +23,12 @@ Correspondingly the `actions/checkout` Action should be configured with `persist
 Please also note that the `actions/checkout` Action must be configured with `fetch-depth: 0` to work with the release Action.
 
 To run subsequent steps conditionally depending on whether it is a release build, use the Action output `publish` as condition.
-(In case of a release build, a git tag is be pushed and GitHub release created by the Action's post-entrypoint only after all steps within the job succeeded.)
+(In case of a release build, a git tag is pushed and a GitHub release created by the Action's post-entrypoint only after all steps within the job succeeded.)
 
 Corresponding to its outputs, the Action exports the following environment variables to subsequent steps:
 
-* `RELEASE_VERSION`: The semantic version (or manually pushed tag) of the release without leading `v`.
-* `RELEASE_PUBLISH`: Is `true` when release build.
+* `RELEASE_VERSION`: The semantic version (or manually pushed tag) of the release without leading `v`. During non-release builds this holds the next version with a `-dev-<SHA>` suffix.
+* `RELEASE_PUBLISH`: Is `true` when release build, otherwise empty.
 
 ### Example workflow
 
@@ -49,7 +49,7 @@ concurrency: # Run release builds sequentially, cancel outdated PR builds
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-permissions:
+permissions: # Grant write access to github.token within non-pull_request builds
   contents: write
 
 jobs:
@@ -73,8 +73,9 @@ jobs:
     # ... Build artifact ...
 
     - name: Publish artifact
-      if: steps.release.outputs.publish # to run only when release build
+      if: steps.release.outputs.publish # To run only when release build
       run: |
+        set -u
         echo Publishing $RELEASE_VERSION
         ...
 ```
