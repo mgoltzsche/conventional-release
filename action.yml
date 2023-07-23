@@ -9,11 +9,14 @@ inputs:
   token:
     description: Token used to push git tag
     required: true
+  auto-release:
+    description: If 'true', creates a release automatically whenever a release-worthy commit is pushed (indicated by commit message) to the release branch.
+    default: true
   release-branch:
-    description: Name of the branch releases should be created from
+    description: Name of the branch releases should be created from when auto-release enabled
     default: main
   replace-major-version-tag:
-    description: If 'true' force-push the major version as git tag
+    description: If 'true', force-push a git tag for the major version
     default: false
   ignore-commits-before:
     description: The commit SHA to start the commit message validation from
@@ -60,3 +63,4 @@ runs:
     GITHUB_RELEASE_LATEST: ${{ inputs.github-release-latest }}
     GITHUB_RELEASE_FILES: ${{ inputs.github-release-files }}
     PUSH_MAJOR_TAG: ${{ inputs.replace-major-version-tag }}
+    AUTO_RELEASE: ${{ inputs.auto-release }}

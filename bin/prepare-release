@@ -23,7 +23,7 @@ if echo "$GIT_REF" | grep -Eq '^refs/tags/'"${TAG_PREFIX}"'[0-9]+(\.[0-9]+(\.[0-
 
 	ISRELEASE=true
 	ISPUSHTAG=false
-elif [ "$RELEASE_BRANCH" = "$BRANCH" ]; then
+elif [ "$RELEASE_BRANCH" = "$BRANCH" -a "$AUTO_RELEASE" = true ]; then
 	if [ "$CURVER" = "$NXTVER" ] || [ "$(echo "$CHANGELOG" | wc -l)" -eq 1 ]; then
 		ISRELEASE=false
 
@@ -42,10 +42,15 @@ elif [ "$RELEASE_BRANCH" = "$BRANCH" ]; then
 	fi
 else
 	NXTVER="$(printf %s-dev-%s "$NXTVER" "$COMMIT")"
+
+	REASON="not on the release branch '$RELEASE_BRANCH' but '$BRANCH'"
+	[ "$AUTO_RELEASE" = true ] || REASON='auto-release=false and no matching tag was pushed manually'
+	echo "Skipping release since $REASON"
+	echo
 fi
 
 # Detect insecure credential usage
-if grep -q 'AUTHORIZATION:' .git/config; then
+if grep -q AUTHORIZATION: .git/config; then
 	echo '::warning title=Credentials persisted within .git/config::Storing git credentials within .git/config grants write access to all subsequent job steps! To reduce the attack surface, this should be avoided by e.g. using actions/checkout@v3 with `persist-credentials: false`.'
 fi
 
