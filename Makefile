@@ -1,6 +1,6 @@
 IMAGE ?= mgoltzsche/conventional-release
 PLATFORMS ?= linux/arm64/v8,linux/amd64
-BUILD_OPTS=
+BUILD_OPTS=--load
 
 all: build
 

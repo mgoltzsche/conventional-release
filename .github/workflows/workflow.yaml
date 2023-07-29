@@ -42,7 +42,6 @@ jobs:
       name: Prepare release
       uses: ./ # mgoltzsche/conventional-release
       with:
-        token: ${{ github.token }}
         github-release-draft: true
         update-major-tag: true
         commit-files: ./action.yml
