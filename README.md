@@ -13,7 +13,14 @@ A GitHub Action to automate releases based on [Conventional Commits](https://www
 
 ## Usage
 
-To enable automated releases within your workflow, add this Action as a step after `actions/checkout` and before your actual build step(s).
+To enable automated releases within your workflow, add a step to runs this Action after `actions/checkout` and before your actual build step(s):
+
+```
+    - id: release
+      name: Prepare release
+      uses: mgoltzsche/conventional-release@v0
+```
+
 For all supported Action inputs and outputs, see [`./action.yml`](./action.yml).
 
 Please note that the releasing job needs to have write permissions for `contents` in order to push a git tag and create a GitHub release.
@@ -67,8 +74,6 @@ jobs:
     - id: release
       name: Prepare release
       uses: mgoltzsche/conventional-release@v0
-      with:
-        token: ${{ github.token }}
 
     # ... Build artifact ...
 
