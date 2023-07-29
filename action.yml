@@ -8,7 +8,7 @@ branding:
 inputs:
   token:
     description: Token used to push git tag
-    required: true
+    default: ${{ github.token }}
   auto-release:
     description: If 'true', creates a release automatically whenever a release-worthy commit is pushed (indicated by commit message) to the release branch.
     default: true
