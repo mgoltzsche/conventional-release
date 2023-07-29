@@ -5,7 +5,7 @@ set -eu
 : ${IGNORE_COMMITS_BEFORE:=}
 
 COMMITLOG="$(git-sv commit-log -r hash -s "$IGNORE_COMMITS_BEFORE")"
-JQQUERY='.[] | select(.message.type==null) | "\u274c ERROR: Commit "+.hash
+JQQUERY='.[] | select(.message.type==null and (.message.description | test("^Merge (branch )?[^ ]+ into [^ ]+") | not)) | "\u274c ERROR: Commit "+.hash
 	+" has malformed message:\n\n  "+.message.description+"\n\n"'
 ERRORS="$(echo "$COMMITLOG" | jq -sr "$JQQUERY")"
 
