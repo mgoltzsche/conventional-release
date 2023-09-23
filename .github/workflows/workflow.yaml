@@ -62,7 +62,7 @@ jobs:
         PUBLISH: ${{ steps.release.outputs.publish }}
 
     - name: Set up qemu
-      uses: docker/setup-qemu-action@v1
+      uses: docker/setup-qemu-action@v3
       with:
         platforms: all
 

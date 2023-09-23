@@ -44,7 +44,7 @@ outputs:
   version:
     description: Next version
   publish:
-    description: Is 'true' when release build, otherwise empty
+    description: Is 'true' when release build, otherwise empty (truthy false)
 
 runs:
   using: docker
