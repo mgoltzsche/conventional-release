@@ -56,6 +56,7 @@ jobs:
           EXPECT_PUBLISH=$(git log --oneline -n1 | grep -Eq '(feat|fix):' && echo true || echo)
         fi
         [ "$PUBLISH" = "$EXPECT_PUBLISH" ]
+        [ "$PUBLISH" = "$RELEASE_PUBLISH" ]
       env:
         VERSION: ${{ steps.release.outputs.version }}
         PUBLISH: ${{ steps.release.outputs.publish }}
