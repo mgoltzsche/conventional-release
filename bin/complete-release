@@ -9,7 +9,7 @@ requireNoUncommittedChanges() {
 	if [ ! -z "$(git status --porcelain)" ]; then
 		git status >&2
 		echo 'ERROR: Working directory contains uncommitted changes!' >&2
-		echo 'Please add those files to .gitignore.' >&2
+		echo 'Please add those files to the commit or to .gitignore.' >&2
 		return 1
 	fi
 }
@@ -17,7 +17,7 @@ requireNoUncommittedChanges() {
 set -eu
 
 if [ ! "$ENABLED" = true ] || [ ! "$STATE_PUBLISH" = true ]; then
-	requireNoUncommittedChanges
+	git status --porcelain
 	echo Skipping release completion
 	exit 0
 fi
@@ -40,7 +40,7 @@ if [ "$COMMIT_FILES" ]; then
 	git add $COMMIT_FILES
 	MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$STATE_VERSION" "$CHANGELOG")"
 	git commit -m"$MSG"
-	requireNoUncommittedChanges || true
+	requireNoUncommittedChanges
 	git tag -a "$GIT_TAG" -m "$MSG" -f
 fi
 
