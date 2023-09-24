@@ -7,9 +7,17 @@ TAG_PREFIX=v
 
 requireNoUncommittedChanges() {
 	if [ ! -z "$(git status --porcelain)" ]; then
-		git status >&2
-		echo 'ERROR: Working directory contains uncommitted changes!' >&2
-		echo 'Please add those files to the commit or to .gitignore.' >&2
+		echo >&2
+		if [ "$STATE_PUBLISH" = true ]; then
+			HINT='   Please add those files to the release commit or .gitignore.'
+		else
+			HINT='   Please add those files to .gitignore.'
+		fi
+		ERR='ERROR: Working directory contains untracked changes!'
+		jq -nr --arg e "$ERR" --arg h "$HINT" \
+			'"\n\u274c "+$e+"\n"+$h+"\n\n"' >&2
+		(set -x; git status >&2)
+		echo >&2
 		return 1
 	fi
 }
@@ -17,7 +25,7 @@ requireNoUncommittedChanges() {
 set -eu
 
 if [ ! "$ENABLED" = true ] || [ ! "$STATE_PUBLISH" = true ]; then
-	git status --porcelain
+	requireNoUncommittedChanges || [ ! "$ENABLED" = true ]
 	echo Skipping release completion
 	exit 0
 fi

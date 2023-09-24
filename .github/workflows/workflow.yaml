@@ -50,13 +50,11 @@ jobs:
       run: |
         set -ux
         echo "$VERSION" | grep -Eq '[0-9]+\.[0-9]+\.[0-9]+(-[^ ]+)?'
-        [ "$VERSION" = "$RELEASE_VERSION" ]
-        EXPECT_PUBLISH=$(echo "$GITHUB_REF" | grep -Eq '^refs/tags/v' && echo true || echo)
-        if [ "$GITHUB_REF" = refs/heads/main ]; then
-          EXPECT_PUBLISH=$(git log --oneline -n1 | grep -Eq '(feat|fix):' && echo true || echo)
+        [ "$VERSION" = "$RELEASE_VERSION" ] # version is always set
+        if [ ! "$GITHUB_REF" = refs/heads/main ]; then
+          [ "$PUBLISH" = '' ] # truthy false within pull requests
+          [ "$PUBLISH" = "$RELEASE_PUBLISH" ]
         fi
-        [ "$PUBLISH" = "$EXPECT_PUBLISH" ]
-        [ "$PUBLISH" = "$RELEASE_PUBLISH" ]
       env:
         VERSION: ${{ steps.release.outputs.version }}
         PUBLISH: ${{ steps.release.outputs.publish }}

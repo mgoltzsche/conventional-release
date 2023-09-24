@@ -21,7 +21,9 @@ inputs:
   ignore-commits-before:
     description: The commit SHA to start the commit message validation from
   commit-files:
-    description: Create a new commit including the specified files and tag it
+    description: |
+      Create a new commit including the specified files and tag it.
+      Multiple files can be separated by whitespace.
   github-release-enabled:
     description: Create GitHub Release
     default: true
