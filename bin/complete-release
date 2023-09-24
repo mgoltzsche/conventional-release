@@ -17,6 +17,7 @@ requireNoUncommittedChanges() {
 		jq -nr --arg e "$ERR" --arg h "$HINT" \
 			'"\n\u274c "+$e+"\n"+$h+"\n\n"' >&2
 		(set -x; git status >&2)
+		echo >&2
 		return 1
 	fi
 }
