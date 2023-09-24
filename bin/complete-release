@@ -7,26 +7,26 @@ TAG_PREFIX=v
 
 requireNoUncommittedChanges() {
 	if [ ! -z "$(git status --porcelain)" ]; then
-		echo >&2
-		if [ "$STATE_PUBLISH" = true ]; then
-			HINT='   Please add those files to the release commit or .gitignore.'
-		else
-			HINT='   Please add those files to .gitignore.'
-		fi
-		ERR='ERROR: Working directory contains untracked changes!'
+		ERR='ERROR: Working directory contains uncommitted changes!'
+		HINT='Please add those files to .gitignore.'
 		jq -nr --arg e "$ERR" --arg h "$HINT" \
-			'"\n\u274c "+$e+"\n"+$h+"\n\n"' >&2
+			'"\n\u274c "+$e+"\n   "+$h+"\n\n"' >&2
 		(set -x; git status >&2)
-		echo >&2
 		return 1
 	fi
 }
 
 set -eu
 
-if [ ! "$ENABLED" = true ] || [ ! "$STATE_PUBLISH" = true ]; then
-	requireNoUncommittedChanges || [ ! "$ENABLED" = true ]
-	echo Skipping release completion
+if [ ! "$ENABLED" = true ]; then
+	echo Skipping release completion since a previous step failed >&2
+	requireNoUncommittedChanges || true
+	exit 0
+fi
+
+if [ ! "$STATE_PUBLISH" = true ]; then
+	requireNoUncommittedChanges
+	echo Skipping release completion within feature branch build >&2
 	exit 0
 fi
 
