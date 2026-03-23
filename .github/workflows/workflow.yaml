@@ -42,7 +42,7 @@ jobs:
       name: Prepare release
       uses: ./ # mgoltzsche/conventional-release
       with:
-        github-release-draft: true
+        github-release-draft: false
         update-major-tag: true
         commit-files: ./action.yml
 
