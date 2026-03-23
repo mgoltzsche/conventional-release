@@ -11,7 +11,7 @@ requireNoUncommittedChanges() {
 		HINT='Please add those files to .gitignore.'
 		jq -nr --arg e "$ERR" --arg h "$HINT" \
 			'"\n\u274c "+$e+"\n   "+$h+"\n\n"' >&2
-		(set -x; git status >&2)
+		git status >&2
 		return 1
 	fi
 }
