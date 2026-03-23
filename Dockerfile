@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:3.23
 RUN apk add --update --no-cache git jq github-cli
 ENV SV4GIT_VERSION=2.9.0
 RUN set -eux; \
