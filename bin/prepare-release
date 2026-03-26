@@ -29,7 +29,7 @@ elif [ "$RELEASE_BRANCH" = "$BRANCH" -a "$AUTO_RELEASE" = true ]; then
 		echo
 	else
 		ISRELEASE=true
-		ISPUSHTAG=true
+		ISPUSHTAG="$TAG_PUSH_ENABLED"
 
 		git config user.name "${GITHUB_ACTOR}"
 		git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
@@ -37,10 +37,6 @@ elif [ "$RELEASE_BRANCH" = "$BRANCH" -a "$AUTO_RELEASE" = true ]; then
 		GIT_TAG="${TAG_PREFIX}$NXTVER"
 		MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$NXTVER" "$CHANGELOG")"
 		git tag -a "$GIT_TAG" -m "$MSG"
-
-		if [ "$SKIP_TAG_PUSH" = true ]; then
-			ISPUSHTAG=false
-		fi
 	fi
 else
 	NXTVER="$(printf %s-dev-%s "$NXTVER" "$COMMIT")"
