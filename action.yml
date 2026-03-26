@@ -24,11 +24,11 @@ inputs:
     description: |
       Create a new commit including the specified files and tag it.
       Multiple files can be separated by whitespace.
-  skip-tag-push:
+  tag-push-enabled:
     description: |
       Set this to false to skip pushing the git tag during the release.
       Disable tag pushing when another tool (e.g. goreleaser) pushes the tag.
-    default: false
+    default: true
   github-release-enabled:
     description: Create GitHub Release
     default: true
@@ -70,5 +70,5 @@ runs:
     GITHUB_RELEASE_LATEST: ${{ inputs.github-release-latest }}
     GITHUB_RELEASE_FILES: ${{ inputs.github-release-files }}
     UPDATE_MAJOR_TAG: ${{ inputs.update-major-tag }}
-    SKIP_TAG_PUSH: ${{ inputs.skip-tag-push }}
+    TAG_PUSH_ENABLED: ${{ inputs.tag-push-enabled }}
     AUTO_RELEASE: ${{ inputs.auto-release }}
