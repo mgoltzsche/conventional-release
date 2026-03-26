@@ -30,7 +30,7 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         # To reduce the attack surface, don't expose the token to subsequent
         # steps implicitly, particularly not to custom, 3rd party build logic.
@@ -60,7 +60,7 @@ jobs:
         PUBLISH: ${{ steps.release.outputs.publish }}
 
     - name: Set up qemu
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@v4
       with:
         platforms: all
 
