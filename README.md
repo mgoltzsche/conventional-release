@@ -18,7 +18,7 @@ To enable automated releases within your workflow, add a step to runs this Actio
 ```
     - id: release
       name: Prepare release
-      uses: mgoltzsche/conventional-release@v0
+      uses: mgoltzsche/conventional-release@v1
 ```
 
 For all supported Action inputs and outputs, see [`./action.yml`](./action.yml).
