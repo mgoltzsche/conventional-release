@@ -3,7 +3,7 @@ RUN apk add --update --no-cache git jq github-cli
 ENV SV4GIT_VERSION=2.9.0
 RUN set -eux; \
 	PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed -E 's!^x86_64$!amd64!; s!^aarch64$!arm64!'); \
-	wget -O - https://github.com/bvieira/sv4git/releases/download/v2.9.0/git-sv_${SV4GIT_VERSION}_${PLATFORM}.tar.gz | tar -xzf - -C /usr/local/bin; \
+	wget -O - https://github.com/bvieira/sv4git/releases/download/v${SV4GIT_VERSION}/git-sv_${SV4GIT_VERSION}_${PLATFORM}.tar.gz | tar -xzf - -C /usr/local/bin; \
 	git-sv --help >/dev/null || [ $? -eq 1 ]
 
 COPY bin/* /usr/local/bin/
