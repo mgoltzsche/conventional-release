@@ -73,7 +73,7 @@ jobs:
 
     - id: release
       name: Prepare release
-      uses: mgoltzsche/conventional-release@v0
+      uses: mgoltzsche/conventional-release@v1
 
     # ... Build artifact ...
 
