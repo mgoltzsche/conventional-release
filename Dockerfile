@@ -1,9 +1,9 @@
 FROM alpine:3.24
 RUN apk add --update --no-cache git jq github-cli
-ENV GITSV_VERSION=3.0.2
+ENV GITSV_VERSION=v3.0.2
 RUN set -eux; \
 	ARCH=$(uname -m | sed -E 's!^x86_64$!amd64!; s!^aarch64$!arm64!'); \
-	wget -O - https://github.com/thegeeklab/git-sv/releases/download/v${GITSV_VERSION}/git-sv-linux-${ARCH} > /usr/local/bin/git-sv; \
+	wget -O - https://github.com/thegeeklab/git-sv/releases/download/${GITSV_VERSION}/git-sv-linux-${ARCH} > /usr/local/bin/git-sv; \
 	chmod +x /usr/local/bin/git-sv; \
 	git-sv --help >/dev/null || [ $? -eq 1 ]
 
