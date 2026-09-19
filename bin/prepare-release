@@ -16,10 +16,6 @@ CHANGELOG="$(git-sv release-notes)"
 ISRELEASE=
 ISPUSHTAG=false
 
-changelog() {
-	git-sv release-notes -t "${TAG_PREFIX}${NXTVER}"
-}
-
 if echo "$GIT_REF" | grep -Eq '^refs/tags/'"${TAG_PREFIX}"'[0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?$'; then
 	# Derive version from manually pushed tag
 	NXTVER=$(echo "$GIT_REF" | sed -E 's!^refs/tags/'"${TAG_PREFIX}"'([0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?)$!\1!')
@@ -56,8 +52,10 @@ if grep -q AUTHORIZATION: .git/config; then
 	echo '::warning title=Credentials persisted within .git/config::Storing git credentials within .git/config grants write access to all subsequent job steps! To reduce the attack surface, this should be avoided by e.g. using actions/checkout@v3 with `persist-credentials: false`.'
 fi
 
+CHANGELOG="$(git-sv release-notes -t "${TAG_PREFIX}${NXTVER}")"
+
 # Set GitHub Action state (post-entrypoint to receive as env vars with prefix STATE_)
-CHANGELOG_BASE64="$(echo "$(changelog)" | base64 -w 0)"
+CHANGELOG_BASE64="$(echo "$CHANGELOG" | base64 -w 0)"
 echo "VERSION=$NXTVER"             >> $GITHUB_STATE
 echo "PUBLISH=$ISRELEASE"          >> $GITHUB_STATE
 echo "PUSHTAG=$ISPUSHTAG"          >> $GITHUB_STATE
