@@ -18,7 +18,7 @@ To enable automated releases within your workflow, add a step to runs this Actio
 ```
     - id: release
       name: Prepare release
-      uses: mgoltzsche/conventional-release@v1
+      uses: mgoltzsche/conventional-release@v2
 ```
 
 For all supported Action inputs and outputs, see [`./action.yml`](./action.yml).
@@ -66,14 +66,14 @@ jobs:
 
     steps:
     - name: Check out code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
         persist-credentials: false
 
     - id: release
       name: Prepare release
-      uses: mgoltzsche/conventional-release@v1
+      uses: mgoltzsche/conventional-release@v2
 
     # ... Build artifact ...
 
