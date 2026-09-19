@@ -16,6 +16,10 @@ CHANGELOG="$(git-sv release-notes)"
 ISRELEASE=
 ISPUSHTAG=false
 
+changelog() {
+	git-sv release-notes -t ${TAG_PREFIX}${NXTVER}
+}
+
 if echo "$GIT_REF" | grep -Eq '^refs/tags/'"${TAG_PREFIX}"'[0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?$'; then
 	# Derive version from manually pushed tag
 	NXTVER=$(echo "$GIT_REF" | sed -E 's!^refs/tags/'"${TAG_PREFIX}"'([0-9]+(\.[0-9]+(\.[0-9]+)?)?(-[a-z0-9\.\-_]+)?)$!\1!')
@@ -24,7 +28,7 @@ if echo "$GIT_REF" | grep -Eq '^refs/tags/'"${TAG_PREFIX}"'[0-9]+(\.[0-9]+(\.[0-
 	ISRELEASE=true
 	ISPUSHTAG=false
 elif [ "$RELEASE_BRANCH" = "$BRANCH" -a "$AUTO_RELEASE" = true ]; then
-	if [ "$CURVER" = "$NXTVER" ] || [ "$(echo "$CHANGELOG" | wc -l)" -eq 1 ]; then
+	if [ "$CURVER" = "$NXTVER" ] || [ "$(echo "$(changelog)" | wc -l)" -eq 1 ]; then
 		echo 'Skipping release since no commit found that needs to be released'
 		echo
 	else
@@ -35,7 +39,7 @@ elif [ "$RELEASE_BRANCH" = "$BRANCH" -a "$AUTO_RELEASE" = true ]; then
 		git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
 		GIT_TAG="${TAG_PREFIX}$NXTVER"
-		MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$NXTVER" "$CHANGELOG")"
+		MSG="$(printf 'chore(release): %s [skip ci]\n\n%s\n' "$NXTVER" "$(changelog)")"
 		git tag -a "$GIT_TAG" -m "$MSG"
 	fi
 else
@@ -53,7 +57,7 @@ if grep -q AUTHORIZATION: .git/config; then
 fi
 
 # Set GitHub Action state (post-entrypoint to receive as env vars with prefix STATE_)
-CHANGELOG_BASE64="$(echo "$CHANGELOG" | base64 -w 0)"
+CHANGELOG_BASE64="$(echo "$(changelog)" | base64 -w 0)"
 echo "VERSION=$NXTVER"             >> $GITHUB_STATE
 echo "PUBLISH=$ISRELEASE"          >> $GITHUB_STATE
 echo "PUSHTAG=$ISPUSHTAG"          >> $GITHUB_STATE
