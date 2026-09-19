@@ -41,9 +41,9 @@ This tool allows to implement a release workflow that is close to the ideal but
 
 However, it does not support commit message validation and changelog generation.
 
-### sv4git
+### git-sv
 
-[sv4git](https://github.com/bvieira/sv4git) (`git-sv`) is a CLI (and git plugin) to generate a release version and changelog as well as for validating commit messages.
+[`git-sv`](https://github.com/thegeeklab/git-sv) (formerly [sv4git](https://github.com/bvieira/sv4git)) is a CLI (and git plugin) to generate a release version and changelog as well as for validating commit messages.
 
 This tool provides the building blocks for an Action.
 
