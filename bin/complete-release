@@ -75,6 +75,7 @@ if [ "$GITHUB_RELEASE_ENABLED" = true ]; then
 	export GH_TOKEN="$GIT_TOKEN"
 	OPTS=
 	[ ! "$GITHUB_RELEASE_LATEST" = true ] || OPTS=--latest
+	[ ! "$GITHUB_RELEASE_PRERELEASE" = true ] || OPTS=--prerelease
 	[ ! "$GITHUB_RELEASE_DRAFT" = true ] || OPTS=--draft
 	gh release create "$GIT_TAG" -t "$GIT_TAG" --notes="$CHANGELOG" $OPTS $GITHUB_RELEASE_FILES
 fi

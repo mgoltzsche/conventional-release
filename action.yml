@@ -35,6 +35,9 @@ inputs:
   github-release-draft:
     description: Create the GitHub Release as draft
     default: false
+  github-release-prerelease:
+    description: Create the GitHub Release as prerelease
+    default: false
   github-release-latest:
     description: Mark GitHub Release as latest
     default: true
@@ -67,6 +70,7 @@ runs:
     COMMIT_FILES: ${{ inputs.commit-files }}
     GITHUB_RELEASE_ENABLED: ${{ inputs.github-release-enabled }}
     GITHUB_RELEASE_DRAFT: ${{ inputs.github-release-draft }}
+    GITHUB_RELEASE_PRERELEASE: ${{ inputs.github-release-prerelease }}
     GITHUB_RELEASE_LATEST: ${{ inputs.github-release-latest }}
     GITHUB_RELEASE_FILES: ${{ inputs.github-release-files }}
     UPDATE_MAJOR_TAG: ${{ inputs.update-major-tag }}
