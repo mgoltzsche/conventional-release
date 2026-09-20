@@ -58,7 +58,7 @@ outputs:
 
 runs:
   using: docker
-  image: Dockerfile
+  image: docker://ghcr.io/mgoltzsche/conventional-release:2.1.0
   entrypoint: prepare-release
   post-entrypoint: complete-release
   env:
